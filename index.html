@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <script src="../js/jquery.js" ></script>
+    <script src="../js/raphael.js" ></script>
+    <script>
+      Raphael.fn.barChart = function() {
+        return new Chart(this);
+      }
+
+      function Chart(paper) {
+        this.paper = paper;
+        this.data = [];
+        this.label = [];
+        this.group = [];
+        this.min = null;
+        this.max = null;
+        this.groupsc = 0;
+        this.maxcol = 0;
+        this.m_out = 2;
+        this.m_in = 1;
+        this.orientation = 'vertical';
+        this.defcolors = ['#428BCA', '#5CB85C', '#5BC0DE', '#F0AD4E', '#D9534F'];
+        this.label = true;
+        this.grid = true;
+      }
+
+      Chart.prototype.addData = function(data) {
+
+        var val, c;
+        for (group in data) {
+          this.groupsc++;
+          this.data[ group ] = [];
+          c = 0;
+          for (value in data[group]) {
+            val = parseFloat(data[group][value])
+            c++;
+            if (val < this.min || this.min == null)
+            {
+              this.min = val
+            }
+            if (val > this.max || this.max == null) {
+              this.max = val;
+            }
+            this.data[group][value] = val;
+          }
+          if (c > this.maxcol) {
+            this.maxcol = c;
+          }
+        }
+      }
+
+      Chart.prototype.addLabel = function(label) {
+        this.label = label;
+      }
+
+      Chart.prototype.addName = function(names) {
+        this.group = names;
+      }
+
+      Chart.prototype.setMin = function(min) {
+        this.min = min;
+      }
+
+      Chart.prototype.setMax = function(max) {
+        this.max = max;
+      }
+
+      Chart.prototype.drawBar = function(cx, cy, width, height) {
+        if (this.orientation == 'vertical') {
+          var step = width / this.maxcol;
+
+          var tmp = {
+            g: 0, v: 0,
+            step: width / this.maxcol,
+            top: this.max + this.max * 0.1,
+            bottom: cy + height
+          };
+          tmp.d_w = (step - 2 * this.m_out) / (this.groupsc);
+
+          if (this.grid) {
+            tmp.grid = this.paper.set()
+            for (var i = 0; i < this.maxcol; i++) {
+              tmp.str = "M" + (cx + i * tmp.step + (tmp.step / 2)) + " " + tmp.bottom +
+                      "L" + (cx + i * tmp.step + (tmp.step / 2)) + " " + (tmp.bottom - height);
+              tmp.grid.push(this.paper.path(tmp.str)).attr({stroke: '#999', 'stroke-dasharray': '--'})
+            }
+          }
+
+          for (var i = 0; i < this.maxcols; i++) {
+
+          }
+
+          for (group in this.data) {
+            tmp.v = 0;
+            tmp.gr = this.paper.set()
+            for (value in this.data[group]) {
+              tmp.colheight = height * this.data[group][value] / tmp.top;
+              tmp.left = cx + tmp.v * tmp.step + this.m_out + (tmp.g * tmp.d_w);
+              tmp.str = "M" + (tmp.left + this.m_in) + " " + tmp.bottom +
+                      " L " + (tmp.left + this.m_in) + " " + (tmp.bottom - tmp.colheight) +
+                      " L " + (tmp.left + tmp.d_w - this.m_in) + " " + (tmp.bottom - tmp.colheight) +
+                      " L " + (tmp.left + tmp.d_w - this.m_in) + " " + (tmp.bottom) + " Z";
+              tmp.gr.push(this.paper.path(tmp.str))
+              tmp.v++;
+            }
+            tmp.gr.attr({stroke: 'none', fill: this.defcolors[tmp.g]})
+            tmp.g++;
+          }
+        }
+      }
+
+      $(document).ready(function() {
+        var table = $('table');
+        var labels = [];
+        var data = [];
+        var groups = [];
+        table.find('tr.title').each(function() {
+          $(this).find('td').each(function(i, v) {
+            data[i] = [];
+            groups[i] = $(v).html();
+          })
+        })
+
+        table.find('tr').not('.title').each(function(i, v) {
+          labels[i] = $(v).find('th').first().html()
+          $(v).find('td').each(function(j, k) {
+            data[j][i] = $(k).html();
+          })
+        })
+        var raphael = Raphael("holder", 700, 300);
+        var chart = raphael.barChart();
+        chart.addData(data);
+        chart.addLabel(labels);
+        chart.addName(groups);
+        chart.setMin(0)
+        console.log(chart);
+        chart.drawBar(10, 10, 500, 200)
+      })
+    </script>
+    <style>
+      #holder {
+        display: inline-block;
+        width: 700px;
+      }
+      .data {
+        display: inline-block;
+        width: 300px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="data">
+      <table>
+        <tbody>
+          <tr class="title">
+            <th></th>
+            <td class="group">2012</td>
+            <td class="group">2011</td>
+            <td class="group">2010</td>
+          </tr>
+          <tr>
+            <th class="name">Ruby</th>
+            <td>80</td>
+            <td>45</td>
+            <td>85</td>
+          </tr>
+          <tr>
+            <th class="name">JavaScript</th>
+            <td>52</td>
+            <td>39</td>
+            <td>26</td>
+          </tr>
+          <tr>
+            <th class="name">Shell</th>
+            <td>10</td>
+            <td>8</td>
+            <td>5</td>
+          </tr>
+          <tr>
+            <th class="name">Python</th>
+            <td>10</td>
+            <td>7</td>
+            <td>5</td>
+          </tr>
+          <tr>
+            <th class="name">PHP</th>
+            <td>8</td>
+            <td>6</td>
+            <td>4</td>
+          </tr>
+          <tr>
+            <th class="name">C</th>
+            <td>8</td>
+            <td>5</td>
+            <td>4</td>
+          </tr>
+          <tr>
+            <th class="name">Perl</th>
+            <td>6</td>
+            <td>4</td>
+            <td>3</td>
+          </tr>
+          <tr>
+            <th class="name">C++</th>
+            <td>4</td>
+            <td>3</td>
+            <td>2</td>
+          </tr>
+          <tr>
+            <th class="name">Java</th>
+            <td>4</td>
+            <td>2</td>
+            <td>2</td>
+          </tr>
+          <tr>
+            <th class="name">Objective-C</th>
+            <td>4</td>
+            <td>4</td>
+            <td>2</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="holder"></div>
+  </body>
+</html>
